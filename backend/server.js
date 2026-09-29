@@ -1,10 +1,14 @@
 const express = require("express");
 const pool = require("./bd/conexion")
+const empleadosRouter = require("./rutas/empleados")
 
 const app=express();
 const PORT =3000;
 
 app.use(express.json());
+
+app.use("/api/empleados", empleadosRouter)
+
 async function probarConexion(){
     try {
         await pool.query("SELECT 1");
