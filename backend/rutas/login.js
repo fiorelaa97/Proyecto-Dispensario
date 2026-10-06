@@ -3,7 +3,7 @@ const pool = require("../bd/conexion");
 
 const router = express.Router();
 
-router.post("/login", async (req, res) => {
+router.post("/", async (req, res) => {
 
     const { nombre_usuario, contrasena } = req.body;
 
