@@ -1,5 +1,5 @@
 import tkinter as tk
-
+from frames.insumos import crear_insumo
 
 def crear_inicio(parent):
 
@@ -24,7 +24,18 @@ def crear_inicio(parent):
         parent,
         bg=FONDO
     )
+    def abrir_insumos():
+        vent = tk.Toplevel(parent)
+        vent.title("Cuidar para Vivir - Insumos")
+        vent.geometry("1100x700")
+        vent.resizable(False, False)
 
+        frame_insumos = crear_insumo(vent)
+
+        frame_insumos.pack(
+            fill="both",
+            expand=True
+        )
     # =========================
     # BARRA LATERAL
     # =========================
@@ -91,7 +102,7 @@ def crear_inicio(parent):
     # OPCIONES DEL MENÚ
     # =========================
 
-    def crear_boton_menu(texto, icono):
+    def crear_boton_menu(texto, icono, comando=None):
 
         boton = tk.Frame(
             menu,
@@ -107,22 +118,31 @@ def crear_inicio(parent):
 
         boton.pack_propagate(False)
 
-        tk.Label(
+        etiqueta_icono = tk.Label(
             boton,
             text=icono,
             font=("Arial", 13),
             fg=BLANCO,
             bg=VERDE_OSCURO,
             width=3
-        ).pack(side="left")
+        )
 
-        tk.Label(
+        etiqueta_icono.pack(side="left")
+
+        etiqueta_texto = tk.Label(
             boton,
             text=texto,
             font=("Arial", 9),
             fg=BLANCO,
             bg=VERDE_OSCURO
-        ).pack(side="left")
+        )
+
+        etiqueta_texto.pack(side="left")
+
+        if comando:
+            boton.bind("<Button-1>", lambda event: comando())
+            etiqueta_icono.bind("<Button-1>", lambda event: comando())
+            etiqueta_texto.bind("<Button-1>", lambda event: comando())
 
         return boton
 
@@ -160,8 +180,13 @@ def crear_inicio(parent):
         bg=VERDE
     ).pack(side="left")
 
+    # crear_boton_menu("Empleados", "●")
+    # crear_boton_menu("Insumos", "◆")
+    # crear_boton_menu("Reportes", "▤")
+    # crear_boton_menu("Configuración", "⚙")
+
     crear_boton_menu("Empleados", "●")
-    crear_boton_menu("Insumos", "◆")
+    crear_boton_menu("Insumos", "◆", abrir_insumos)
     crear_boton_menu("Reportes", "▤")
     crear_boton_menu("Configuración", "⚙")
 

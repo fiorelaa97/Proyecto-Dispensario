@@ -166,7 +166,7 @@ def recuperar_password():
 ventana = tk.Tk()
 
 ventana.title(
-    "Cuidar para Vivir - Inicio de sesión"
+    "Mi dispensario - Inicio de sesión"
 )
 
 ventana.geometry(
