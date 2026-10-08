@@ -1,5 +1,5 @@
 import tkinter as tk
-from frames.insumos import crear_insumo
+from frames.movimientoInsumos import crear_movimientoinsumo
 
 def crear_inicio(parent):
 
@@ -24,18 +24,19 @@ def crear_inicio(parent):
         parent,
         bg=FONDO
     )
-    def abrir_insumos():
+    def abrir_movimientoInsumos():
         vent = tk.Toplevel(parent)
         vent.title("Cuidar para Vivir - Insumos")
         vent.geometry("1100x700")
         vent.resizable(False, False)
 
-        frame_insumos = crear_insumo(vent)
+        frame_insumos = crear_movimientoinsumo(vent)
 
         frame_insumos.pack(
             fill="both",
             expand=True
         )
+    abrir_movimientoInsumos()
     # =========================
     # BARRA LATERAL
     # =========================
