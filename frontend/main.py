@@ -22,42 +22,47 @@ NEGRO = "#17343A"
 # FUNCIONES
 # =========================================================
 
-def mostrar_inicio():
+def mostrar_frame(funcion):
     """
-    Oculta la pantalla de login y muestra la pantalla principal.
+    Reemplaza el contenido de la pantalla principal por el frame solicitado.
+    Permite cambiar entre inicio, empleados y otras pantallas.
     """
-
     global contenedor
 
-    # Ocultar el login completo
-    login_frame.pack_forget()
+    if "contenedor" not in globals() or not contenedor.winfo_exists():
+        contenedor = tk.Frame(ventana, bg="#eef1f5")
+        contenedor.pack(fill="both", expand=True)
 
-    # Crear contenedor de la pantalla principal
-    contenedor = tk.Frame(
-        ventana,
-        bg="#eef1f5"
-    )
+    # Eliminar únicamente los widgets de la pantalla principal actual.
+    for widget in contenedor.winfo_children():
+        widget.destroy()
 
-    contenedor.pack(
-        fill="both",
-        expand=True
-    )
-
-    # Crear pantalla de inicio
     try:
-        frame_inicio = crear_inicio(contenedor)
+        nuevo_frame = funcion(contenedor)
 
-        frame_inicio.pack(
-            fill="both",
-            expand=True
-        )
+        if nuevo_frame is not None:
+            nuevo_frame.pack(fill="both", expand=True)
 
     except Exception as error:
         messagebox.showerror(
             "Error",
-            f"No se pudo cargar la pantalla de inicio:\n\n{error}"
+            f"No se pudo cargar la pantalla solicitada:\n\n{error}",
+            parent=ventana
         )
 
+
+def mostrar_inicio():
+    """
+    Oculta la pantalla de login y muestra la pantalla principal.
+    """
+    global contenedor
+    login_frame.pack_forget()
+
+    if "contenedor" not in globals() or not contenedor.winfo_exists():
+        contenedor = tk.Frame(ventana, bg="#eef1f5")
+        contenedor.pack(fill="both", expand=True)
+
+    mostrar_frame(crear_inicio)
 
 def iniciar_sesion():
     """
@@ -173,10 +178,6 @@ ventana.geometry(
     "900x550"
 )
 
-ventana.resizable(
-    False,
-    False
-)
 
 ventana.configure(
     bg=BLANCO

@@ -104,6 +104,22 @@ def crear_insumo(parent):
     )
     btn_nuevo.pack(side="right")
 
+    btn_eliminar = tk.Button(
+        encabezado, text="🗑  Eliminar", font=("Segoe UI", 10, "bold"),
+        fg="white", bg=COLOR_PRINCIPAL, activebackground=COLOR_PRINCIPAL_OSCURO,
+        activeforeground="white", relief="flat", bd=0, cursor="hand2",
+        padx=15, pady=8
+    )
+    btn_eliminar.pack(side="right", padx=(0, 8))
+
+    btn_editar = tk.Button(
+        encabezado, text="✎  Editar", font=("Segoe UI", 10, "bold"),
+        fg="white", bg=COLOR_PRINCIPAL, activebackground=COLOR_PRINCIPAL_OSCURO,
+        activeforeground="white", relief="flat", bd=0, cursor="hand2",
+        padx=15, pady=8
+    )
+    btn_editar.pack(side="right", padx=(0, 8))
+
     # ======================================================
     # BARRA DE BÚSQUEDA Y FILTRO
     # ======================================================
@@ -881,7 +897,7 @@ def crear_insumo(parent):
                 timeout=5
             )
 
-            if respuesta.status_code == 200:
+            if respuesta.status_code in (200, 204):
 
                 messagebox.showinfo(
                     "Correcto",
@@ -908,71 +924,10 @@ def crear_insumo(parent):
     # CLICK EN ACCIONES
     # ------------------------------------------------------
 
-    def click_tabla(event):
+    # Doble clic en una fila para editar el insumo seleccionado.
+    tabla.bind("<Double-1>", lambda event: editar_seleccionado())
 
-        region = tabla.identify(
-            "region",
-            event.x,
-            event.y
-        )
-
-        if region != "cell":
-            return
-
-        fila = tabla.identify_row(event.y)
-        columna = tabla.identify_column(event.x)
-
-        if not fila:
-            return
-
-        valores = tabla.item(
-            fila,
-            "values"
-        )
-
-        if not valores:
-            return
-
-        id_insumo = valores[0]
-
-        # Columna Acciones
-        if columna == "#8":
-
-            # mitad izquierda = editar
-            x_fila = tabla.bbox(
-                fila,
-                "#8"
-            )
-
-            if not x_fila:
-                return
-
-            inicio_x = x_fila[0]
-            ancho = x_fila[2]
-
-            posicion = event.x - inicio_x
-
-            if posicion < ancho / 2:
-
-                insumo = obtener_insumo_por_id(
-                    id_insumo
-                )
-
-                if insumo:
-                    abrir_formulario(insumo)
-
-            else:
-
-                eliminar_insumo(
-                    id_insumo
-                )
-
-    tabla.bind(
-        "<Button-1>",
-        click_tabla
-    )
-
-    # ======================================================
+    # ------------------------------------------------------
     # BUSCADOR
     # ======================================================
 
@@ -990,9 +945,33 @@ def crear_insumo(parent):
     # BOTÓN NUEVO
     # ======================================================
 
-    btn_nuevo.configure(
-        command=lambda: abrir_formulario()
-    )
+    def insumo_seleccionado():
+        seleccion = tabla.selection()
+        if not seleccion:
+            messagebox.showwarning(
+                "Seleccionar insumo",
+                "Seleccioná un insumo de la tabla primero.",
+                parent=parent
+            )
+            return None
+        valores = tabla.item(seleccion[0], "values")
+        if not valores:
+            return None
+        return obtener_insumo_por_id(valores[0])
+
+    def editar_seleccionado():
+        insumo = insumo_seleccionado()
+        if insumo:
+            abrir_formulario(insumo)
+
+    def eliminar_seleccionado():
+        insumo = insumo_seleccionado()
+        if insumo:
+            eliminar_insumo(insumo.get("id_insumo"))
+
+    btn_nuevo.configure(command=lambda: abrir_formulario())
+    btn_editar.configure(command=editar_seleccionado)
+    btn_eliminar.configure(command=eliminar_seleccionado)
 
     # ======================================================
     # CARGAR DATOS AL INICIAR

@@ -3,9 +3,33 @@ const pool = require("../bd/conexion");
 
 const router = express.Router();
 
-// ==========================
-// AGREGAR UN EMPLEADO
-// ==========================
+
+
+// ==================================================
+// LISTAR ESTADOS
+// GET /api/empleados/listas/estados
+// ==================================================
+router.get("/listas/estados", async (req, res) => {
+    try {
+        const [estados] = await pool.execute(
+            `SELECT id_estado, nombre_estado
+             FROM estados
+             ORDER BY nombre_estado`
+        );
+
+        res.status(200).json(estados);
+    } catch (error) {
+        res.status(500).json({
+            error: "No se pudieron obtener los estados",
+            detalle: error.message
+        });
+    }
+});
+
+// ==================================================
+// AGREGAR EMPLEADO
+// POST /api/empleados
+// ==================================================
 router.post("/", async (req, res) => {
     const {
         nombre,
@@ -18,10 +42,11 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     try {
-        await pool.execute(
+        const [resultado] = await pool.execute(
             `INSERT INTO empleados
-            (nombre, apellido, dni, telefono, cargo, fecha_ingreso, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (nombre, apellido, dni, telefono, cargo,
+             fecha_ingreso, estado)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
                 nombre,
                 apellido,
@@ -34,9 +59,9 @@ router.post("/", async (req, res) => {
         );
 
         res.status(201).json({
-            mensaje: "Empleado agregado correctamente"
+            mensaje: "Empleado agregado correctamente",
+            id_empleado: resultado.insertId
         });
-
     } catch (error) {
         res.status(500).json({
             error: "No se pudo agregar el empleado",
@@ -45,18 +70,27 @@ router.post("/", async (req, res) => {
     }
 });
 
-
-// ==========================
-// LEER TODOS LOS EMPLEADOS
-// ==========================
+// ==================================================
+// LISTAR TODOS LOS EMPLEADOS CON NOMBRES
+// GET /api/empleados
+// ==================================================
 router.get("/", async (req, res) => {
     try {
-        const [empleados] = await pool.execute(
-            "SELECT * FROM empleados"
-        );
+       const [empleados] = await pool.execute(
+    `SELECT
+        id_empleado,
+        nombre,
+        apellido,
+        dni,
+        telefono,
+        fecha_ingreso,
+        cargo,
+        estado
+     FROM empleados
+     ORDER BY id_empleado DESC`
+);
 
         res.status(200).json(empleados);
-
     } catch (error) {
         res.status(500).json({
             error: "No se pudieron obtener los empleados",
@@ -65,16 +99,30 @@ router.get("/", async (req, res) => {
     }
 });
 
-
-// ==========================
-// LEER UN EMPLEADO POR ID
-// ==========================
+// ==================================================
+// LISTAR UN EMPLEADO POR ID CON NOMBRES
+// GET /api/empleados/:id
+// ==================================================
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
         const [empleados] = await pool.execute(
-            "SELECT * FROM empleados WHERE id = ?",
+            `SELECT
+                e.id_empleado,
+                e.nombre,
+                e.apellido,
+                e.dni,
+                e.telefono,
+                c.nombre_cargo AS cargo,
+                e.fecha_ingreso,
+                es.nombre_estado AS estado
+             FROM empleados e
+             LEFT JOIN cargos c
+                ON e.cargo = c.id_cargo
+             LEFT JOIN estados es
+                ON e.estado = es.id_estado
+             WHERE e.id_empleado = ?`,
             [id]
         );
 
@@ -85,7 +133,6 @@ router.get("/:id", async (req, res) => {
         }
 
         res.status(200).json(empleados[0]);
-
     } catch (error) {
         res.status(500).json({
             error: "No se pudo obtener el empleado",
@@ -94,10 +141,10 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-
-// ==========================
-// EDITAR UN EMPLEADO
-// ==========================
+// ==================================================
+// MODIFICAR EMPLEADO
+// PUT /api/empleados/:id
+// ==================================================
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -121,7 +168,7 @@ router.put("/:id", async (req, res) => {
                 cargo = ?,
                 fecha_ingreso = ?,
                 estado = ?
-            WHERE id = ?`,
+             WHERE id_empleado = ?`,
             [
                 nombre,
                 apellido,
@@ -135,15 +182,21 @@ router.put("/:id", async (req, res) => {
         );
 
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({
-                error: "Empleado no encontrado"
-            });
+            const [existe] = await pool.execute(
+                "SELECT id_empleado FROM empleados WHERE id_empleado = ?",
+                [id]
+            );
+
+            if (existe.length === 0) {
+                return res.status(404).json({
+                    error: "Empleado no encontrado"
+                });
+            }
         }
 
         res.status(200).json({
             mensaje: "Empleado actualizado correctamente"
         });
-
     } catch (error) {
         res.status(500).json({
             error: "No se pudo actualizar el empleado",
@@ -152,16 +205,16 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-
-// ==========================
-// ELIMINAR UN EMPLEADO
-// ==========================
+// ==================================================
+// ELIMINAR EMPLEADO
+// DELETE /api/empleados/:id
+// ==================================================
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
         const [resultado] = await pool.execute(
-            "DELETE FROM empleados WHERE id = ?",
+            "DELETE FROM empleados WHERE id_empleado = ?",
             [id]
         );
 
@@ -174,7 +227,6 @@ router.delete("/:id", async (req, res) => {
         res.status(200).json({
             mensaje: "Empleado eliminado correctamente"
         });
-
     } catch (error) {
         res.status(500).json({
             error: "No se pudo eliminar el empleado",
@@ -182,6 +234,5 @@ router.delete("/:id", async (req, res) => {
         });
     }
 });
-
 
 module.exports = router;

@@ -1,5 +1,12 @@
+
 import tkinter as tk
+from tkinter import messagebox
+
+from frames.insumos import crear_insumo
+from frames.empleados import crear_empleado
+from frames.usuario import usuarios
 from frames.movimientoInsumos import crear_movimientoinsumo
+
 
 def crear_inicio(parent):
 
@@ -19,54 +26,22 @@ def crear_inicio(parent):
     # =========================
     # FRAME PRINCIPAL
     # =========================
+    frame = tk.Frame(parent, bg=FONDO)
 
-    frame = tk.Frame(
-        parent,
-        bg=FONDO
-    )
-    def abrir_movimientoInsumos():
-        vent = tk.Toplevel(parent)
-        vent.title("Cuidar para Vivir - Insumos")
-        vent.geometry("1100x700")
-        vent.resizable(False, False)
-
-        frame_insumos = crear_movimientoinsumo(vent)
-
-        frame_insumos.pack(
-            fill="both",
-            expand=True
-        )
-    abrir_movimientoInsumos()
     # =========================
     # BARRA LATERAL
     # =========================
-
     menu = tk.Frame(
         frame,
         bg=VERDE_OSCURO,
         width=220
     )
-
-    menu.pack(
-        side="left",
-        fill="y"
-    )
-
+    menu.pack(side="left", fill="y")
     menu.pack_propagate(False)
 
-    # -------------------------
     # Logo
-    # -------------------------
-
-    logo_frame = tk.Frame(
-        menu,
-        bg=VERDE_OSCURO
-    )
-
-    logo_frame.pack(
-        fill="x",
-        pady=(20, 10)
-    )
+    logo_frame = tk.Frame(menu, bg=VERDE_OSCURO)
+    logo_frame.pack(fill="x", pady=(20, 10))
 
     tk.Label(
         logo_frame,
@@ -76,11 +51,7 @@ def crear_inicio(parent):
         bg=VERDE_OSCURO
     ).pack(side="left", padx=(18, 7))
 
-    nombre_logo = tk.Frame(
-        logo_frame,
-        bg=VERDE_OSCURO
-    )
-
+    nombre_logo = tk.Frame(logo_frame, bg=VERDE_OSCURO)
     nombre_logo.pack(side="left")
 
     tk.Label(
@@ -100,23 +71,106 @@ def crear_inicio(parent):
     ).pack(anchor="w")
 
     # =========================
-    # OPCIONES DEL MENÚ
+    # CONTENIDO PRINCIPAL
     # =========================
+    contenido = tk.Frame(frame, bg=FONDO)
+    contenido.pack(
+        side="right",
+        fill="both",
+        expand=True
+    )
 
+    # Panel que conserva la pantalla de inicio
+    panel_inicio = tk.Frame(contenido, bg=FONDO)
+    panel_inicio.pack(fill="both", expand=True)
+
+    # Referencia a la vista actualmente abierta
+    vista_activa = None
+
+    # =========================
+    # CAMBIAR VISTAS
+    # =========================
+    def mostrar_vista(funcion_vista):
+
+        nonlocal vista_activa
+
+        # Ocultar el panel de inicio
+        panel_inicio.pack_forget()
+
+        # Cerrar la vista anterior
+        if vista_activa is not None:
+            vista_activa.destroy()
+            vista_activa = None
+
+        # Crear un contenedor para la nueva vista
+        vista_activa = tk.Frame(
+            contenido,
+            bg=FONDO
+        )
+        vista_activa.pack(
+            fill="both",
+            expand=True
+        )
+
+        try:
+            # La vista recibe el contenedor como parent
+            resultado = funcion_vista(vista_activa)
+
+            # Si devuelve otro widget, mostrarlo
+            if (
+                isinstance(resultado, tk.Widget)
+                and resultado is not vista_activa
+                and not resultado.winfo_manager()
+            ):
+                resultado.pack(
+                    fill="both",
+                    expand=True
+                )
+
+        except Exception as error:
+            # Evitar dejar la pantalla vacía si falla la vista
+            vista_activa.destroy()
+            vista_activa = None
+
+            panel_inicio.pack(
+                fill="both",
+                expand=True
+            )
+
+            messagebox.showerror(
+                "Error al abrir la vista",
+                "No se pudo abrir la pantalla seleccionada.\n\n"
+                f"Detalle: {error}"
+            )
+
+    def volver_inicio():
+        nonlocal vista_activa
+
+        if vista_activa is not None:
+            vista_activa.destroy()
+            vista_activa = None
+
+        panel_inicio.pack(
+            fill="both",
+            expand=True
+        )
+
+    # =========================
+    # BOTONES DEL MENÚ
+    # =========================
     def crear_boton_menu(texto, icono, comando=None):
 
         boton = tk.Frame(
             menu,
             bg=VERDE_OSCURO,
-            height=42
+            height=42,
+            cursor="hand2"
         )
-
         boton.pack(
             fill="x",
             padx=8,
             pady=2
         )
-
         boton.pack_propagate(False)
 
         etiqueta_icono = tk.Label(
@@ -125,9 +179,9 @@ def crear_inicio(parent):
             font=("Arial", 13),
             fg=BLANCO,
             bg=VERDE_OSCURO,
-            width=3
+            width=3,
+            cursor="hand2"
         )
-
         etiqueta_icono.pack(side="left")
 
         etiqueta_texto = tk.Label(
@@ -135,61 +189,114 @@ def crear_inicio(parent):
             text=texto,
             font=("Arial", 9),
             fg=BLANCO,
-            bg=VERDE_OSCURO
+            bg=VERDE_OSCURO,
+            cursor="hand2"
         )
-
         etiqueta_texto.pack(side="left")
 
-        if comando:
-            boton.bind("<Button-1>", lambda event: comando())
-            etiqueta_icono.bind("<Button-1>", lambda event: comando())
-            etiqueta_texto.bind("<Button-1>", lambda event: comando())
+        if comando is not None:
+
+            def ejecutar(event=None):
+                comando()
+
+            boton.bind("<Button-1>", ejecutar)
+            etiqueta_icono.bind("<Button-1>", ejecutar)
+            etiqueta_texto.bind("<Button-1>", ejecutar)
+
+            # Efecto visual al pasar el mouse
+            def entrar(event):
+                boton.configure(bg=VERDE)
+                etiqueta_icono.configure(bg=VERDE)
+                etiqueta_texto.configure(bg=VERDE)
+
+            def salir(event):
+                boton.configure(bg=VERDE_OSCURO)
+                etiqueta_icono.configure(bg=VERDE_OSCURO)
+                etiqueta_texto.configure(bg=VERDE_OSCURO)
+
+            for widget in (boton, etiqueta_icono, etiqueta_texto):
+                widget.bind("<Enter>", entrar)
+                widget.bind("<Leave>", salir)
 
         return boton
 
-    # Inicio seleccionado
+    # Inicio
     inicio_boton = tk.Frame(
         menu,
         bg=VERDE,
-        height=42
+        height=42,
+        cursor="hand2"
     )
-
     inicio_boton.pack(
         fill="x",
         padx=8,
         pady=(5, 2)
     )
-
     inicio_boton.pack_propagate(False)
 
-    tk.Label(
+    inicio_icono = tk.Label(
         inicio_boton,
         text="⌂",
         font=("Arial", 15, "bold"),
         fg=BLANCO,
-        bg=VERDE
-    ).pack(
-        side="left",
-        padx=(10, 10)
+        bg=VERDE,
+        cursor="hand2"
     )
+    inicio_icono.pack(side="left", padx=(10, 10))
 
-    tk.Label(
+    inicio_texto = tk.Label(
         inicio_boton,
         text="Inicio",
         font=("Arial", 9, "bold"),
         fg=BLANCO,
-        bg=VERDE
-    ).pack(side="left")
+        bg=VERDE,
+        cursor="hand2"
+    )
+    inicio_texto.pack(side="left")
 
-    # crear_boton_menu("Empleados", "●")
-    # crear_boton_menu("Insumos", "◆")
-    # crear_boton_menu("Reportes", "▤")
-    # crear_boton_menu("Configuración", "⚙")
+    inicio_boton.bind(
+        "<Button-1>",
+        lambda event: volver_inicio()
+    )
+    inicio_icono.bind(
+        "<Button-1>",
+        lambda event: volver_inicio()
+    )
+    inicio_texto.bind(
+        "<Button-1>",
+        lambda event: volver_inicio()
+    )
 
-    crear_boton_menu("Empleados", "●")
-    crear_boton_menu("Insumos", "◆", abrir_insumos)
-    crear_boton_menu("Reportes", "▤")
-    crear_boton_menu("Configuración", "⚙")
+    # Opciones del menú
+    crear_boton_menu(
+        "Empleados",
+        "●",
+        lambda: mostrar_vista(crear_empleado)
+    )
+
+    crear_boton_menu(
+        "Insumos",
+        "◆",
+        lambda: mostrar_vista(crear_insumo)
+    )
+
+    crear_boton_menu(
+        "Movimientos",
+        "↔",
+        lambda: mostrar_vista(crear_movimientoinsumo)
+    )
+
+    crear_boton_menu(
+        "Reportes",
+        "▤",
+        lambda: mostrar_vista(vista_reportes)
+    )
+
+    crear_boton_menu(
+        "Configuración",
+        "⚙",
+        lambda: mostrar_vista(usuarios)
+    )
 
     # Separador
     tk.Frame(
@@ -202,52 +309,82 @@ def crear_inicio(parent):
         pady=(150, 15)
     )
 
-    # Cerrar sesión
-    crear_boton_menu("Cerrar sesión", "↪")
-
     # =========================
-    # CONTENIDO PRINCIPAL
+    # CERRAR SESIÓN
     # =========================
+    def cerrar_sesion():
 
-    contenido = tk.Frame(
-        frame,
-        bg=FONDO
+        confirmar = messagebox.askyesno(
+            "Cerrar sesión",
+            "¿Estás seguro de que querés cerrar sesión?"
+        )
+
+        if confirmar:
+            # Destruye esta pantalla.
+            # El controlador principal debe mostrar el login.
+            frame.destroy()
+
+    crear_boton_menu(
+        "Cerrar sesión",
+        "↪",
+        cerrar_sesion
     )
 
-    contenido.pack(
-        side="right",
-        fill="both",
-        expand=True
-    )
+    # =========================
+    # VISTA DE REPORTES
+    # =========================
+    def vista_reportes(parent_vista):
+
+        reportes = tk.Frame(
+            parent_vista,
+            bg=FONDO
+        )
+        reportes.pack(fill="both", expand=True)
+
+        tk.Label(
+            reportes,
+            text="Reportes",
+            font=("Arial", 20, "bold"),
+            fg=TEXTO,
+            bg=FONDO
+        ).pack(
+            anchor="w",
+            padx=25,
+            pady=(25, 10)
+        )
+
+        tk.Label(
+            reportes,
+            text="La sección de reportes está pendiente de implementar.",
+            font=("Arial", 11),
+            fg=GRIS,
+            bg=FONDO
+        ).pack(
+            anchor="w",
+            padx=25
+        )
+
+        return reportes
+
+    
 
     # =========================
-    # CABECERA
+    # CABECERA DEL INICIO
     # =========================
-
     cabecera = tk.Frame(
-        contenido,
+        panel_inicio,
         bg=FONDO,
         height=75
     )
-
     cabecera.pack(
         fill="x",
         padx=25,
         pady=(15, 0)
     )
-
     cabecera.pack_propagate(False)
 
-    # Título
-    titulo = tk.Frame(
-        cabecera,
-        bg=FONDO
-    )
-
-    titulo.pack(
-        side="left",
-        anchor="nw"
-    )
+    titulo = tk.Frame(cabecera, bg=FONDO)
+    titulo.pack(side="left", anchor="nw")
 
     tk.Label(
         titulo,
@@ -265,27 +402,16 @@ def crear_inicio(parent):
         bg=FONDO
     ).pack(anchor="w", pady=(3, 0))
 
-    # Información derecha
-    usuario = tk.Frame(
-        cabecera,
-        bg=FONDO
-    )
-
-    usuario.pack(
-        side="right",
-        anchor="ne"
-    )
+    usuario = tk.Frame(cabecera, bg=FONDO)
+    usuario.pack(side="right", anchor="ne")
 
     tk.Label(
         usuario,
-        text="▣  18 de mayo de 2025",
+        text="▣  20 de octubre de 2026",
         font=("Arial", 8),
         fg=GRIS,
         bg=FONDO
-    ).pack(
-        side="left",
-        padx=20
-    )
+    ).pack(side="left", padx=20)
 
     tk.Label(
         usuario,
@@ -301,35 +427,29 @@ def crear_inicio(parent):
         font=("Arial", 8, "bold"),
         fg=TEXTO,
         bg=FONDO
-    ).pack(
-        side="left",
-        padx=5
-    )
+    ).pack(side="left", padx=5)
 
     # =========================
     # TARJETAS DE ESTADÍSTICAS
     # =========================
-
     estadisticas = tk.Frame(
-        contenido,
+        panel_inicio,
         bg=FONDO
     )
-
     estadisticas.pack(
         fill="x",
         padx=25,
         pady=(5, 10)
     )
 
-    def crear_estadistica(parent, icono, numero, texto, color):
+    def crear_estadistica(parent_tarjeta, icono, numero, texto, color):
 
         tarjeta = tk.Frame(
-            parent,
+            parent_tarjeta,
             bg=BLANCO,
             highlightbackground=GRIS_CLARO,
             highlightthickness=1
         )
-
         tarjeta.pack(
             side="left",
             fill="both",
@@ -337,7 +457,6 @@ def crear_inicio(parent):
             padx=4
         )
 
-        # Icono
         tk.Label(
             tarjeta,
             text=icono,
@@ -409,12 +528,10 @@ def crear_inicio(parent):
     # =========================
     # TARJETAS INFERIORES
     # =========================
-
     inferiores = tk.Frame(
-        contenido,
+        panel_inicio,
         bg=FONDO
     )
-
     inferiores.pack(
         fill="both",
         expand=True,
@@ -422,17 +539,13 @@ def crear_inicio(parent):
         pady=5
     )
 
-    # -------------------------
-    # Registro de empleados
-    # -------------------------
-
+    # Tarjeta de empleados
     empleados = tk.Frame(
         inferiores,
         bg=BLANCO,
         highlightbackground=GRIS_CLARO,
         highlightthickness=1
     )
-
     empleados.pack(
         side="left",
         fill="both",
@@ -452,11 +565,7 @@ def crear_inicio(parent):
         pady=20
     )
 
-    info_empleados = tk.Frame(
-        empleados,
-        bg=BLANCO
-    )
-
+    info_empleados = tk.Frame(empleados, bg=BLANCO)
     info_empleados.pack(
         side="left",
         fill="both",
@@ -494,20 +603,17 @@ def crear_inicio(parent):
         activeforeground=BLANCO,
         bd=0,
         padx=12,
-        pady=5
+        pady=5,
+        command=lambda: mostrar_vista(crear_empleado)
     ).pack(anchor="w")
 
-    # -------------------------
-    # Control de insumos
-    # -------------------------
-
+    # Tarjeta de insumos
     insumos = tk.Frame(
         inferiores,
         bg=BLANCO,
         highlightbackground=GRIS_CLARO,
         highlightthickness=1
     )
-
     insumos.pack(
         side="right",
         fill="both",
@@ -527,11 +633,7 @@ def crear_inicio(parent):
         pady=20
     )
 
-    info_insumos = tk.Frame(
-        insumos,
-        bg=BLANCO
-    )
-
+    info_insumos = tk.Frame(insumos, bg=BLANCO)
     info_insumos.pack(
         side="left",
         fill="both",
@@ -569,7 +671,8 @@ def crear_inicio(parent):
         activeforeground=BLANCO,
         bd=0,
         padx=12,
-        pady=5
+        pady=5,
+        command=lambda: mostrar_vista(crear_insumo)
     ).pack(anchor="w")
 
     return frame
