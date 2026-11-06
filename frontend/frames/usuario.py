@@ -108,8 +108,13 @@ def usuarios(parent):
             )
 
             filtro_texto = entrada_busqueda.get().strip().lower()
-            filtro_rol = combo_filtro.get()
 
+# Ignorar el texto de ejemplo del buscador
+            if filtro_texto == "buscar por nombre de usuario, rol o empleado...":
+                filtro_texto = ""
+
+            filtro_rol = combo_filtro.get()
+            
             cantidad = 0
 
             for usuario in lista:
