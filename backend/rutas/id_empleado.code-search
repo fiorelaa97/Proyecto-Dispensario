@@ -1,0 +1,9 @@
+# Query: kuñid_emplead
+# ContextLines: 1
+
+1 resultado - 1 archivo
+
+backend\rutas\empleados.js:
+  89       FROM empleados
+  90:      ORDER BY id_empleado DESC`
+  91  );

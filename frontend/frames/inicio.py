@@ -1,11 +1,40 @@
 
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
+import os
 
 from frames.insumos import crear_insumo
 from frames.empleados import crear_empleado
 from frames.usuario import usuarios
 from frames.movimientoInsumos import crear_movimientoinsumo
+
+ICONOS = {}
+
+CARPETA_ICONOS = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "iconos"
+)
+
+def cargar_icono(nombre):
+
+    if nombre not in ICONOS:
+
+        ruta = os.path.join(
+            CARPETA_ICONOS,
+            nombre + ".png"
+        )
+
+        imagen = Image.open(ruta).convert("RGBA")
+
+        imagen = imagen.resize(
+            (22, 22),
+            Image.Resampling.LANCZOS
+        )
+
+        ICONOS[nombre] = ImageTk.PhotoImage(imagen)
+
+    return ICONOS[nombre]
 
 
 def crear_inicio(parent):
@@ -56,7 +85,7 @@ def crear_inicio(parent):
 
     tk.Label(
         nombre_logo,
-        text="Cuidar para Vivir",
+        text="Mi dispensario",
         font=("Arial", 11, "bold"),
         fg=BLANCO,
         bg=VERDE_OSCURO
@@ -158,6 +187,68 @@ def crear_inicio(parent):
     # =========================
     # BOTONES DEL MENÚ
     # =========================
+    # def crear_boton_menu(texto, icono, comando=None):
+
+    #     boton = tk.Frame(
+    #         menu,
+    #         bg=VERDE_OSCURO,
+    #         height=42,
+    #         cursor="hand2"
+    #     )
+    #     boton.pack(
+    #         fill="x",
+    #         padx=8,
+    #         pady=2
+    #     )
+    #     boton.pack_propagate(False)
+
+    #     etiqueta_icono = tk.Label(
+    #         boton,
+    #         text=icono,
+    #         font=("Arial", 13),
+    #         fg=BLANCO,
+    #         bg=VERDE_OSCURO,
+    #         width=3,
+    #         cursor="hand2"
+    #     )
+    #     etiqueta_icono.pack(side="left")
+
+    #     etiqueta_texto = tk.Label(
+    #         boton,
+    #         text=texto,
+    #         font=("Arial", 9),
+    #         fg=BLANCO,
+    #         bg=VERDE_OSCURO,
+    #         cursor="hand2"
+    #     )
+    #     etiqueta_texto.pack(side="left")
+
+    #     if comando is not None:
+
+    #         def ejecutar(event=None):
+    #             comando()
+
+    #         boton.bind("<Button-1>", ejecutar)
+    #         etiqueta_icono.bind("<Button-1>", ejecutar)
+    #         etiqueta_texto.bind("<Button-1>", ejecutar)
+
+    #         # Efecto visual al pasar el mouse
+    #         def entrar(event):
+    #             boton.configure(bg=VERDE)
+    #             etiqueta_icono.configure(bg=VERDE)
+    #             etiqueta_texto.configure(bg=VERDE)
+
+    #         def salir(event):
+    #             boton.configure(bg=VERDE_OSCURO)
+    #             etiqueta_icono.configure(bg=VERDE_OSCURO)
+    #             etiqueta_texto.configure(bg=VERDE_OSCURO)
+
+    #         for widget in (boton, etiqueta_icono, etiqueta_texto):
+    #             widget.bind("<Enter>", entrar)
+    #             widget.bind("<Leave>", salir)
+
+    #     return boton
+
     def crear_boton_menu(texto, icono, comando=None):
 
         boton = tk.Frame(
@@ -166,32 +257,39 @@ def crear_inicio(parent):
             height=42,
             cursor="hand2"
         )
+
         boton.pack(
             fill="x",
             padx=8,
             pady=2
         )
+
         boton.pack_propagate(False)
+
+        # Icono moderno
+        imagen_icono = cargar_icono(icono)
 
         etiqueta_icono = tk.Label(
             boton,
-            text=icono,
-            font=("Arial", 13),
-            fg=BLANCO,
+            image=imagen_icono,
             bg=VERDE_OSCURO,
-            width=3,
+            width=35,
             cursor="hand2"
         )
-        etiqueta_icono.pack(side="left")
 
+        etiqueta_icono.image = imagen_icono
+        etiqueta_icono.pack(side="left", padx=(5, 5))
+
+        # Texto
         etiqueta_texto = tk.Label(
             boton,
             text=texto,
-            font=("Arial", 9),
+            font=("Segoe UI", 10),
             fg=BLANCO,
             bg=VERDE_OSCURO,
             cursor="hand2"
         )
+
         etiqueta_texto.pack(side="left")
 
         if comando is not None:
@@ -199,102 +297,190 @@ def crear_inicio(parent):
             def ejecutar(event=None):
                 comando()
 
-            boton.bind("<Button-1>", ejecutar)
-            etiqueta_icono.bind("<Button-1>", ejecutar)
-            etiqueta_texto.bind("<Button-1>", ejecutar)
-
-            # Efecto visual al pasar el mouse
             def entrar(event):
-                boton.configure(bg=VERDE)
-                etiqueta_icono.configure(bg=VERDE)
-                etiqueta_texto.configure(bg=VERDE)
+                for widget in (boton, etiqueta_icono, etiqueta_texto):
+                    widget.configure(bg=VERDE)
 
             def salir(event):
-                boton.configure(bg=VERDE_OSCURO)
-                etiqueta_icono.configure(bg=VERDE_OSCURO)
-                etiqueta_texto.configure(bg=VERDE_OSCURO)
+                for widget in (boton, etiqueta_icono, etiqueta_texto):
+                    widget.configure(bg=VERDE_OSCURO)
 
             for widget in (boton, etiqueta_icono, etiqueta_texto):
+
+                widget.bind("<Button-1>", ejecutar)
                 widget.bind("<Enter>", entrar)
                 widget.bind("<Leave>", salir)
 
         return boton
 
     # Inicio
+    # inicio_boton = tk.Frame(
+    #     menu,
+    #     bg=VERDE,
+    #     height=42,
+    #     cursor="hand2"
+    # )
+    # inicio_boton.pack(
+    #     fill="x",
+    #     padx=8,
+    #     pady=(5, 2)
+    # )
+    # inicio_boton.pack_propagate(False)
+
+    # inicio_icono = tk.Label(
+    #     inicio_boton,
+    #     text="⌂",
+    #     font=("Arial", 15, "bold"),
+    #     fg=BLANCO,
+    #     bg=VERDE,
+    #     cursor="hand2"
+    # )
+    # inicio_icono.pack(side="left", padx=(10, 10))
+
+    # inicio_texto = tk.Label(
+    #     inicio_boton,
+    #     text="Inicio",
+    #     font=("Arial", 9, "bold"),
+    #     fg=BLANCO,
+    #     bg=VERDE,
+    #     cursor="hand2"
+    # )
+    # inicio_texto.pack(side="left")
+
+    # inicio_boton.bind(
+    #     "<Button-1>",
+    #     lambda event: volver_inicio()
+    # )
+    # inicio_icono.bind(
+    #     "<Button-1>",
+    #     lambda event: volver_inicio()
+    # )
+    # inicio_texto.bind(
+    #     "<Button-1>",
+    #     lambda event: volver_inicio()
+    # )
+    # =========================
+    # BOTÓN INICIO
+    # =========================
+
     inicio_boton = tk.Frame(
         menu,
         bg=VERDE,
         height=42,
         cursor="hand2"
     )
+
     inicio_boton.pack(
         fill="x",
         padx=8,
         pady=(5, 2)
     )
+
     inicio_boton.pack_propagate(False)
+
+    # Icono PNG
+    inicio_imagen = cargar_icono("house")
 
     inicio_icono = tk.Label(
         inicio_boton,
-        text="⌂",
-        font=("Arial", 15, "bold"),
-        fg=BLANCO,
+        image=inicio_imagen,
         bg=VERDE,
-        cursor="hand2"
+        cursor="hand2",
+        width=35
     )
-    inicio_icono.pack(side="left", padx=(10, 10))
 
+    inicio_icono.image = inicio_imagen
+
+    inicio_icono.pack(
+        side="left",
+        padx=(5, 5)
+    )
+
+    # Texto
     inicio_texto = tk.Label(
         inicio_boton,
         text="Inicio",
-        font=("Arial", 9, "bold"),
+        font=("Segoe UI", 10, "bold"),
         fg=BLANCO,
         bg=VERDE,
         cursor="hand2"
     )
+
     inicio_texto.pack(side="left")
 
-    inicio_boton.bind(
-        "<Button-1>",
-        lambda event: volver_inicio()
-    )
-    inicio_icono.bind(
-        "<Button-1>",
-        lambda event: volver_inicio()
-    )
-    inicio_texto.bind(
-        "<Button-1>",
-        lambda event: volver_inicio()
-    )
+
+    # Acción del botón
+    def ejecutar_inicio(event=None):
+        volver_inicio()
+
+
+    inicio_boton.bind("<Button-1>", ejecutar_inicio)
+    inicio_icono.bind("<Button-1>", ejecutar_inicio)
+    inicio_texto.bind("<Button-1>", ejecutar_inicio)
 
     # Opciones del menú
+    # crear_boton_menu(
+    #     "Empleados",
+    #     "●",
+    #     lambda: mostrar_vista(crear_empleado)
+    # )
+
+    # crear_boton_menu(
+    #     "Insumos",
+    #     "◆",
+    #     lambda: mostrar_vista(crear_insumo)
+    # )
+
+    # crear_boton_menu(
+    #     "Movimientos",
+    #     "↔",
+    #     lambda: mostrar_vista(crear_movimientoinsumo)
+    # )
+
+    # crear_boton_menu(
+    #     "Reportes",
+    #     "▤",
+    #     lambda: mostrar_vista(vista_reportes)
+    # )
+
+    # crear_boton_menu(
+    #     "Configuración",
+    #     "⚙",
+    #     lambda: mostrar_vista(usuarios)
+    # )
+    
+    # Empleados
     crear_boton_menu(
         "Empleados",
-        "●",
+        "users",
         lambda: mostrar_vista(crear_empleado)
     )
 
+    # Insumos
     crear_boton_menu(
         "Insumos",
-        "◆",
+        "box",
         lambda: mostrar_vista(crear_insumo)
     )
 
+    # Movimientos
     crear_boton_menu(
         "Movimientos",
-        "↔",
+        "arrow-left-right",
         lambda: mostrar_vista(crear_movimientoinsumo)
     )
 
+    # Reportes
     crear_boton_menu(
         "Reportes",
-        "▤",
+        "chart-no-axes-combined",
         lambda: mostrar_vista(vista_reportes)
     )
 
+    # Configuración
     crear_boton_menu(
         "Configuración",
-        "⚙",
+        "settings",
         lambda: mostrar_vista(usuarios)
     )
 
@@ -326,7 +512,7 @@ def crear_inicio(parent):
 
     crear_boton_menu(
         "Cerrar sesión",
-        "↪",
+        "log-out",
         cerrar_sesion
     )
 

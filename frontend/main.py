@@ -1,6 +1,8 @@
+
 import tkinter as tk
 from tkinter import messagebox
 import requests
+from frames.notificaciones import mostrar_toast
 
 from frames.inicio import crear_inicio
 
@@ -24,16 +26,15 @@ NEGRO = "#17343A"
 
 def mostrar_frame(funcion):
     """
-    Reemplaza el contenido de la pantalla principal por el frame solicitado.
-    Permite cambiar entre inicio, empleados y otras pantallas.
+    Reemplaza el contenido de la pantalla principal.
     """
+
     global contenedor
 
     if "contenedor" not in globals() or not contenedor.winfo_exists():
         contenedor = tk.Frame(ventana, bg="#eef1f5")
         contenedor.pack(fill="both", expand=True)
 
-    # Eliminar únicamente los widgets de la pantalla principal actual.
     for widget in contenedor.winfo_children():
         widget.destroy()
 
@@ -53,9 +54,11 @@ def mostrar_frame(funcion):
 
 def mostrar_inicio():
     """
-    Oculta la pantalla de login y muestra la pantalla principal.
+    Oculta el login y muestra la pantalla principal.
     """
+
     global contenedor
+
     login_frame.pack_forget()
 
     if "contenedor" not in globals() or not contenedor.winfo_exists():
@@ -63,6 +66,7 @@ def mostrar_inicio():
         contenedor.pack(fill="both", expand=True)
 
     mostrar_frame(crear_inicio)
+
 
 def iniciar_sesion():
     """
@@ -72,11 +76,12 @@ def iniciar_sesion():
     usuario = entrada_usuario.get().strip()
     contraseña = entrada_password.get()
 
-    # Validar campos
     if not usuario or not contraseña:
-        messagebox.showwarning(
+        mostrar_toast(
+            ventana,
             "Campos vacíos",
-            "Ingrese usuario y contraseña."
+            "Ingrese usuario y contraseña.",
+            "advertencia"
         )
         return
 
@@ -95,18 +100,22 @@ def iniciar_sesion():
 
         if respuesta.status_code == 200:
 
-            messagebox.showinfo(
+            mostrar_toast(
+                ventana,
                 "Inicio de sesión",
-                "¡Bienvenido!"
+                "¡Bienvenido!",
+                "exito"
             )
 
             mostrar_inicio()
 
         elif respuesta.status_code == 401:
 
-            messagebox.showerror(
-                "Error",
-                "Usuario o contraseña incorrectos."
+            mostrar_toast(
+                ventana,
+                "Acceso denegado",
+                "Usuario o contraseña incorrectos.",
+                "error"
             )
 
         else:
@@ -170,18 +179,11 @@ def recuperar_password():
 
 ventana = tk.Tk()
 
-ventana.title(
-    "Mi dispensario - Inicio de sesión"
-)
+ventana.title("Mi dispensario - Inicio de sesión")
 
-ventana.geometry(
-    "900x550"
-)
+ventana.geometry("900x550")
 
-
-ventana.configure(
-    bg=BLANCO
-)
+ventana.configure(bg=BLANCO)
 
 
 # =========================================================
@@ -230,12 +232,11 @@ logo = tk.Canvas(
     highlightthickness=0
 )
 
-logo.pack(
-    pady=(55, 5)
-)
+logo.pack(pady=(55, 5))
 
 
 # Círculo
+
 logo.create_oval(
     10, 10,
     80, 80,
@@ -245,6 +246,7 @@ logo.create_oval(
 
 
 # Cruz vertical
+
 logo.create_rectangle(
     37, 20,
     53, 70,
@@ -254,6 +256,7 @@ logo.create_rectangle(
 
 
 # Cruz horizontal
+
 logo.create_rectangle(
     20, 37,
     70, 53,
@@ -262,19 +265,20 @@ logo.create_rectangle(
 )
 
 
-# Línea de pulso
-logo.create_line(
-    18, 57,
-    30, 57,
-    35, 47,
-    42, 65,
-    49, 40,
-    56, 57,
-    72, 57,
-    fill=TURQUESA,
-    width=3,
-    smooth=True
-)
+# Línea de pulso del logo
+
+#logo.create_line(
+#    18, 57,
+#    30, 57,
+#    35, 47,
+#    42, 65,
+#    49, 40,
+#    56, 57,
+#    72, 57,
+#    fill=TURQUESA,
+#    width=3,
+#    smooth=True
+#)
 
 
 # =========================================================
@@ -283,13 +287,11 @@ logo.create_line(
 
 tk.Label(
     panel_izquierdo,
-    text="Cuidar para Vivir",
+    text="Mi dispensario",
     font=("Arial", 20, "bold"),
     fg=BLANCO,
     bg=TURQUESA_OSCURO
-).pack(
-    pady=(5, 0)
-)
+).pack(pady=(5, 0))
 
 
 tk.Label(
@@ -311,57 +313,7 @@ tk.Label(
     font=("Arial", 10),
     fg="#C8EEEE",
     bg=TURQUESA_OSCURO
-).pack(
-    pady=(45, 20)
-)
-
-
-# =========================================================
-# PULSO DECORATIVO
-# =========================================================
-
-pulso = tk.Canvas(
-    panel_izquierdo,
-    width=270,
-    height=80,
-    bg=TURQUESA_OSCURO,
-    highlightthickness=0
-)
-
-pulso.pack()
-
-
-# Línea de pulso
-pulso.create_line(
-    5, 50,
-    35, 50,
-    43, 25,
-    51, 65,
-    60, 40,
-    70, 50,
-    90, 50,
-    fill="#35BABA",
-    width=3,
-    smooth=True
-)
-
-
-# Corazón
-pulso.create_line(
-    90, 42,
-    105, 25,
-    120, 25,
-    135, 40,
-    150, 25,
-    170, 25,
-    185, 42,
-    185, 55,
-    138, 76,
-    90, 42,
-    fill="#35BABA",
-    width=3,
-    smooth=True
-)
+).pack(pady=(45, 20))
 
 
 # =========================================================
@@ -410,9 +362,7 @@ tk.Label(
     fg=NEGRO,
     bg=BLANCO,
     anchor="w"
-).pack(
-    fill="x"
-)
+).pack(fill="x")
 
 
 tk.Label(
@@ -451,9 +401,7 @@ contenedor_usuario = tk.Frame(
     height=40
 )
 
-contenedor_usuario.pack(
-    fill="x"
-)
+contenedor_usuario.pack(fill="x")
 
 contenedor_usuario.pack_propagate(False)
 
@@ -510,9 +458,7 @@ contenedor_password = tk.Frame(
     height=40
 )
 
-contenedor_password.pack(
-    fill="x"
-)
+contenedor_password.pack(fill="x")
 
 contenedor_password.pack_propagate(False)
 
@@ -583,9 +529,7 @@ fila_opciones.pack(
 )
 
 
-recordar = tk.BooleanVar(
-    value=True
-)
+recordar = tk.BooleanVar(value=True)
 
 
 tk.Checkbutton(
@@ -598,9 +542,7 @@ tk.Checkbutton(
     activebackground=BLANCO,
     selectcolor=BLANCO,
     cursor="hand2"
-).pack(
-    side="left"
-)
+).pack(side="left")
 
 
 tk.Button(
@@ -614,9 +556,7 @@ tk.Button(
     bd=0,
     cursor="hand2",
     command=recuperar_password
-).pack(
-    side="right"
-)
+).pack(side="right")
 
 
 # =========================================================
@@ -638,9 +578,7 @@ boton_login = tk.Button(
     command=iniciar_sesion
 )
 
-boton_login.pack(
-    fill="x"
-)
+boton_login.pack(fill="x")
 
 
 # =========================================================
@@ -660,7 +598,7 @@ ventana.bind(
 entrada_usuario.focus()
 
 
-# =========================================================
+# =========================================================ui
 # INICIAR PROGRAMA
 # =========================================================
 
