@@ -503,7 +503,7 @@ def crear_inicio(parent):
     crear_boton_menu(
         "Reportes",
         "chart-no-axes-combined",
-        lambda: mostrar_vista(vista_reportes)
+        lambda: mostrar_vista(crear_reportes)
     )
 
     # Configuración
