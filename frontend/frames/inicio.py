@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import requests
 
 from frames.insumos import crear_insumo
@@ -13,7 +13,15 @@ from frames.movimientoInsumos import crear_movimientoinsumo
 from frames.reportes import crear_reportes
 
 
-API_URL = "http://localhost:3000/api/reportes"
+# =========================
+# CONFIGURACIÓN DE LA API
+# =========================
+
+API_URL = "http://localhost:3000/api"
+
+# =========================
+# CONFIGURACIÓN DE ICONOS
+# =========================
 
 ICONOS = {}
 
@@ -21,6 +29,7 @@ CARPETA_ICONOS = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "iconos"
 )
+
 
 def cargar_icono(nombre):
 
@@ -43,11 +52,16 @@ def cargar_icono(nombre):
     return ICONOS[nombre]
 
 
+# =========================
+# PANTALLA DE INICIO
+# =========================
+
 def crear_inicio(parent):
 
     # =========================
     # COLORES
     # =========================
+
     VERDE_OSCURO = "#006B6B"
     VERDE = "#009999"
     BLANCO = "#FFFFFF"
@@ -62,17 +76,33 @@ def crear_inicio(parent):
     # =========================
     # MENÚ LATERAL
     # =========================
-    menu = tk.Frame(frame, bg=VERDE_OSCURO, width=220)
-    menu.pack(side="left", fill="y")
+
+    menu = tk.Frame(
+        frame,
+        bg=VERDE_OSCURO,
+        width=220
+    )
+
+    menu.pack(
+        side="left",
+        fill="y"
+    )
+
     menu.pack_propagate(False)
 
-    tk.Label(
+    # =========================
+    # LOGO DEL MENÚ LATERAL
+    # =========================
+
+    logo_frame = tk.Frame(
         menu,
-        text="✚  Cuidar para Vivir",
-        font=("Arial", 13, "bold"),
-        bg=VERDE_OSCURO,
-        fg=BLANCO
-    ).pack(pady=(25, 5))
+        bg=VERDE_OSCURO
+    )
+
+    logo_frame.pack(
+        fill="x",
+        pady=(25, 30)
+    )
 
     tk.Label(
         logo_frame,
@@ -80,9 +110,16 @@ def crear_inicio(parent):
         font=("Arial", 25, "bold"),
         fg=BLANCO,
         bg=VERDE_OSCURO
-    ).pack(side="left", padx=(18, 7))
+    ).pack(
+        side="left",
+        padx=(18, 7)
+    )
 
-    nombre_logo = tk.Frame(logo_frame, bg=VERDE_OSCURO)
+    nombre_logo = tk.Frame(
+        logo_frame,
+        bg=VERDE_OSCURO
+    )
+
     nombre_logo.pack(side="left")
 
     tk.Label(
@@ -99,56 +136,115 @@ def crear_inicio(parent):
         font=("Arial", 9),
         bg=VERDE_OSCURO,
         fg="#BFE5E5"
-    ).pack(pady=(0, 30))
+    ).pack(anchor="w")
 
-    contenido = tk.Frame(frame, bg=FONDO)
-    contenido.pack(side="right", fill="both", expand=True)
+    # =========================
+    # CONTENIDO PRINCIPAL
+    # =========================
 
-    panel_inicio = tk.Frame(contenido, bg=FONDO)
-    panel_inicio.pack(fill="both", expand=True)
+    contenido = tk.Frame(
+        frame,
+        bg=FONDO
+    )
+
+    contenido.pack(
+        side="right",
+        fill="both",
+        expand=True
+    )
+
+    panel_inicio = tk.Frame(
+        contenido,
+        bg=FONDO
+    )
+
+    panel_inicio.pack(
+        fill="both",
+        expand=True
+    )
 
     vista_activa = None
 
     # =========================
     # CONEXIÓN CON LA API
     # =========================
+
     def consultar(ruta, clave):
+
         respuesta = requests.get(
             f"{API_URL}/{ruta}",
             timeout=8
         )
+
         respuesta.raise_for_status()
 
         datos = respuesta.json()
+
         if isinstance(datos, list):
             return datos
+
         return datos.get(clave, [])
 
+    # =========================
+    # CONVERTIR FECHAS
+    # =========================
+
     def convertir_fecha(valor):
+
         try:
+
             if not valor:
                 return None
-            return date.fromisoformat(str(valor)[:10])
+
+            return date.fromisoformat(
+                str(valor)[:10]
+            )
+
         except (ValueError, TypeError):
+
             return None
 
+    # =========================
+    # ACTUALIZAR ESTADÍSTICAS
+    # =========================
+
     def actualizar_estadisticas():
+
         try:
-            empleados = consultar("empleados", "empleados")
-            insumos = consultar("insumos", "insumos")
+
+            empleados = consultar(
+                "empleados",
+                "empleados"
+            )
+
+            insumos = consultar(
+                "insumos",
+                "insumos"
+            )
 
             hoy = date.today()
+
             limite = hoy + timedelta(days=30)
 
             stock_bajo = 0
             vencimientos = 0
 
             for insumo in insumos:
-                cantidad = float(insumo.get("cantidad") or 0)
-                minimo = float(insumo.get("stock_minimo") or 0)
+
+                cantidad = float(
+                    insumo.get("cantidad") or 0
+                )
+
+                minimo = float(
+                    insumo.get("stock_minimo") or 0
+                )
+
+                # Control de stock mínimo
 
                 if cantidad <= minimo:
                     stock_bajo += 1
+
+                # Control de vencimientos
 
                 fecha = convertir_fecha(
                     insumo.get("fecha_vencimiento")
@@ -157,18 +253,35 @@ def crear_inicio(parent):
                 if fecha and hoy <= fecha <= limite:
                     vencimientos += 1
 
-            lbl_empleados.config(text=str(len(empleados)))
-            lbl_insumos.config(text=str(len(insumos)))
-            lbl_stock.config(text=str(stock_bajo))
-            lbl_vencimientos.config(text=str(vencimientos))
+            lbl_empleados.config(
+                text=str(len(empleados))
+            )
 
-        except (requests.RequestException, ValueError, TypeError) as error:
+            lbl_insumos.config(
+                text=str(len(insumos))
+            )
+
+            lbl_stock.config(
+                text=str(stock_bajo)
+            )
+
+            lbl_vencimientos.config(
+                text=str(vencimientos)
+            )
+
+        except (
+            requests.RequestException,
+            ValueError,
+            TypeError
+        ) as error:
+
             for etiqueta in (
                 lbl_empleados,
                 lbl_insumos,
                 lbl_stock,
                 lbl_vencimientos
             ):
+
                 etiqueta.config(text="--")
 
             messagebox.showwarning(
@@ -177,106 +290,72 @@ def crear_inicio(parent):
             )
 
     # =========================
-    # NAVEGACIÓN
+    # NAVEGACIÓN ENTRE PANTALLAS
     # =========================
+
     def mostrar_vista(funcion):
+
         nonlocal vista_activa
 
         panel_inicio.pack_forget()
 
         if vista_activa:
+
             vista_activa.destroy()
 
-        vista_activa = tk.Frame(contenido, bg=FONDO)
-        vista_activa.pack(fill="both", expand=True)
+        vista_activa = tk.Frame(
+            contenido,
+            bg=FONDO
+        )
+
+        vista_activa.pack(
+            fill="both",
+            expand=True
+        )
 
         try:
+
             resultado = funcion(vista_activa)
 
             if isinstance(resultado, tk.Widget):
+
                 if not resultado.winfo_manager():
-                    resultado.pack(fill="both", expand=True)
+
+                    resultado.pack(
+                        fill="both",
+                        expand=True
+                    )
 
         except Exception as error:
+
             messagebox.showerror(
                 "Error",
                 f"No se pudo abrir la pantalla:\n{error}"
             )
 
+    # =========================
+    # VOLVER AL INICIO
+    # =========================
+
     def volver_inicio():
+
         nonlocal vista_activa
 
         if vista_activa:
+
             vista_activa.destroy()
             vista_activa = None
 
-        panel_inicio.pack(fill="both", expand=True)
+        panel_inicio.pack(
+            fill="both",
+            expand=True
+        )
+
         actualizar_estadisticas()
 
     # =========================
     # BOTONES DEL MENÚ
     # =========================
-    # def crear_boton_menu(texto, icono, comando=None):
-
-    #     boton = tk.Frame(
-    #         menu,
-    #         bg=VERDE_OSCURO,
-    #         height=42,
-    #         cursor="hand2"
-    #     )
-    #     boton.pack(
-    #         fill="x",
-    #         padx=8,
-    #         pady=2
-    #     )
-    #     boton.pack_propagate(False)
-
-    #     etiqueta_icono = tk.Label(
-    #         boton,
-    #         text=icono,
-    #         font=("Arial", 13),
-    #         fg=BLANCO,
-    #         bg=VERDE_OSCURO,
-    #         width=3,
-    #         cursor="hand2"
-    #     )
-    #     etiqueta_icono.pack(side="left")
-
-    #     etiqueta_texto = tk.Label(
-    #         boton,
-    #         text=texto,
-    #         font=("Arial", 9),
-    #         fg=BLANCO,
-    #         bg=VERDE_OSCURO,
-    #         cursor="hand2"
-    #     )
-    #     etiqueta_texto.pack(side="left")
-
-    #     if comando is not None:
-
-    #         def ejecutar(event=None):
-    #             comando()
-
-    #         boton.bind("<Button-1>", ejecutar)
-    #         etiqueta_icono.bind("<Button-1>", ejecutar)
-    #         etiqueta_texto.bind("<Button-1>", ejecutar)
-
-    #         # Efecto visual al pasar el mouse
-    #         def entrar(event):
-    #             boton.configure(bg=VERDE)
-    #             etiqueta_icono.configure(bg=VERDE)
-    #             etiqueta_texto.configure(bg=VERDE)
-
-    #         def salir(event):
-    #             boton.configure(bg=VERDE_OSCURO)
-    #             etiqueta_icono.configure(bg=VERDE_OSCURO)
-    #             etiqueta_texto.configure(bg=VERDE_OSCURO)
-
-    #         for widget in (boton, etiqueta_icono, etiqueta_texto):
-    #             widget.bind("<Enter>", entrar)
-    #             widget.bind("<Leave>", salir)
-
-    #     return boton
 
     def crear_boton_menu(texto, icono, comando=None):
 
@@ -295,7 +374,8 @@ def crear_inicio(parent):
 
         boton.pack_propagate(False)
 
-        # Icono moderno
+        # Icono
+
         imagen_icono = cargar_icono(icono)
 
         etiqueta_icono = tk.Label(
@@ -307,9 +387,14 @@ def crear_inicio(parent):
         )
 
         etiqueta_icono.image = imagen_icono
-        etiqueta_icono.pack(side="left", padx=(5, 5))
+
+        etiqueta_icono.pack(
+            side="left",
+            padx=(5, 5)
+        )
 
         # Texto
+
         etiqueta_texto = tk.Label(
             boton,
             text=texto,
@@ -327,67 +412,48 @@ def crear_inicio(parent):
                 comando()
 
             def entrar(event):
-                for widget in (boton, etiqueta_icono, etiqueta_texto):
+
+                for widget in (
+                    boton,
+                    etiqueta_icono,
+                    etiqueta_texto
+                ):
+
                     widget.configure(bg=VERDE)
 
             def salir(event):
-                for widget in (boton, etiqueta_icono, etiqueta_texto):
+
+                for widget in (
+                    boton,
+                    etiqueta_icono,
+                    etiqueta_texto
+                ):
+
                     widget.configure(bg=VERDE_OSCURO)
 
-            for widget in (boton, etiqueta_icono, etiqueta_texto):
+            for widget in (
+                boton,
+                etiqueta_icono,
+                etiqueta_texto
+            ):
 
-                widget.bind("<Button-1>", ejecutar)
-                widget.bind("<Enter>", entrar)
-                widget.bind("<Leave>", salir)
+                widget.bind(
+                    "<Button-1>",
+                    ejecutar
+                )
+
+                widget.bind(
+                    "<Enter>",
+                    entrar
+                )
+
+                widget.bind(
+                    "<Leave>",
+                    salir
+                )
 
         return boton
 
-    # Inicio
-    # inicio_boton = tk.Frame(
-    #     menu,
-    #     bg=VERDE,
-    #     height=42,
-    #     cursor="hand2"
-    # )
-    # inicio_boton.pack(
-    #     fill="x",
-    #     padx=8,
-    #     pady=(5, 2)
-    # )
-    # inicio_boton.pack_propagate(False)
-
-    # inicio_icono = tk.Label(
-    #     inicio_boton,
-    #     text="⌂",
-    #     font=("Arial", 15, "bold"),
-    #     fg=BLANCO,
-    #     bg=VERDE,
-    #     cursor="hand2"
-    # )
-    # inicio_icono.pack(side="left", padx=(10, 10))
-
-    # inicio_texto = tk.Label(
-    #     inicio_boton,
-    #     text="Inicio",
-    #     font=("Arial", 9, "bold"),
-    #     fg=BLANCO,
-    #     bg=VERDE,
-    #     cursor="hand2"
-    # )
-    # inicio_texto.pack(side="left")
-
-    # inicio_boton.bind(
-    #     "<Button-1>",
-    #     lambda event: volver_inicio()
-    # )
-    # inicio_icono.bind(
-    #     "<Button-1>",
-    #     lambda event: volver_inicio()
-    # )
-    # inicio_texto.bind(
-    #     "<Button-1>",
-    #     lambda event: volver_inicio()
-    # )
     # =========================
     # BOTÓN INICIO
     # =========================
@@ -407,7 +473,8 @@ def crear_inicio(parent):
 
     inicio_boton.pack_propagate(False)
 
-    # Icono PNG
+    # Icono de inicio
+
     inicio_imagen = cargar_icono("house")
 
     inicio_icono = tk.Label(
@@ -425,7 +492,8 @@ def crear_inicio(parent):
         padx=(5, 5)
     )
 
-    # Texto
+    # Texto de inicio
+
     inicio_texto = tk.Label(
         inicio_boton,
         text="Inicio",
@@ -437,48 +505,31 @@ def crear_inicio(parent):
 
     inicio_texto.pack(side="left")
 
-
-    # Acción del botón
     def ejecutar_inicio(event=None):
+
         volver_inicio()
 
+    inicio_boton.bind(
+        "<Button-1>",
+        ejecutar_inicio
+    )
 
-    inicio_boton.bind("<Button-1>", ejecutar_inicio)
-    inicio_icono.bind("<Button-1>", ejecutar_inicio)
-    inicio_texto.bind("<Button-1>", ejecutar_inicio)
+    inicio_icono.bind(
+        "<Button-1>",
+        ejecutar_inicio
+    )
 
-    # Opciones del menú
-    # crear_boton_menu(
-    #     "Empleados",
-    #     "●",
-    #     lambda: mostrar_vista(crear_empleado)
-    # )
+    inicio_texto.bind(
+        "<Button-1>",
+        ejecutar_inicio
+    )
 
-    # crear_boton_menu(
-    #     "Insumos",
-    #     "◆",
-    #     lambda: mostrar_vista(crear_insumo)
-    # )
+    # =========================
+    # OPCIONES DEL MENÚ
+    # =========================
 
-    # crear_boton_menu(
-    #     "Movimientos",
-    #     "↔",
-    #     lambda: mostrar_vista(crear_movimientoinsumo)
-    # )
-
-    # crear_boton_menu(
-    #     "Reportes",
-    #     "▤",
-    #     lambda: mostrar_vista(vista_reportes)
-    # )
-
-    # crear_boton_menu(
-    #     "Configuración",
-    #     "⚙",
-    #     lambda: mostrar_vista(usuarios)
-    # )
-    
     # Empleados
+
     crear_boton_menu(
         "Empleados",
         "users",
@@ -486,6 +537,7 @@ def crear_inicio(parent):
     )
 
     # Insumos
+
     crear_boton_menu(
         "Insumos",
         "box",
@@ -493,6 +545,7 @@ def crear_inicio(parent):
     )
 
     # Movimientos
+
     crear_boton_menu(
         "Movimientos",
         "arrow-left-right",
@@ -500,6 +553,7 @@ def crear_inicio(parent):
     )
 
     # Reportes
+
     crear_boton_menu(
         "Reportes",
         "chart-no-axes-combined",
@@ -507,17 +561,24 @@ def crear_inicio(parent):
     )
 
     # Configuración
+
     crear_boton_menu(
         "Configuración",
         "settings",
         lambda: mostrar_vista(usuarios)
     )
 
+    # =========================
+    # CERRAR SESIÓN
+    # =========================
+
     def cerrar_sesion():
+
         if messagebox.askyesno(
             "Cerrar sesión",
             "¿Deseás cerrar sesión?"
         ):
+
             frame.destroy()
 
     crear_boton_menu(
@@ -529,8 +590,17 @@ def crear_inicio(parent):
     # =========================
     # ENCABEZADO
     # =========================
-    cabecera = tk.Frame(panel_inicio, bg=FONDO)
-    cabecera.pack(fill="x", padx=25, pady=(25, 15))
+
+    cabecera = tk.Frame(
+        panel_inicio,
+        bg=FONDO
+    )
+
+    cabecera.pack(
+        fill="x",
+        padx=25,
+        pady=(25, 15)
+    )
 
     tk.Label(
         cabecera,
@@ -546,7 +616,10 @@ def crear_inicio(parent):
         font=("Arial", 10),
         bg=FONDO,
         fg=GRIS
-    ).pack(anchor="w", pady=5)
+    ).pack(
+        anchor="w",
+        pady=5
+    )
 
     tk.Label(
         cabecera,
@@ -559,16 +632,27 @@ def crear_inicio(parent):
     # =========================
     # TARJETAS DE ESTADÍSTICAS
     # =========================
-    estadisticas = tk.Frame(panel_inicio, bg=FONDO)
-    estadisticas.pack(fill="x", padx=25, pady=15)
+
+    estadisticas = tk.Frame(
+        panel_inicio,
+        bg=FONDO
+    )
+
+    estadisticas.pack(
+        fill="x",
+        padx=25,
+        pady=15
+    )
 
     def tarjeta(icono, descripcion, color):
+
         contenedor = tk.Frame(
             estadisticas,
             bg=BLANCO,
             highlightbackground=BORDE,
             highlightthickness=1
         )
+
         contenedor.pack(
             side="left",
             fill="both",
@@ -582,7 +666,11 @@ def crear_inicio(parent):
             font=("Arial", 20),
             bg=BLANCO,
             fg=color
-        ).pack(anchor="w", padx=15, pady=(12, 0))
+        ).pack(
+            anchor="w",
+            padx=15,
+            pady=(12, 0)
+        )
 
         numero = tk.Label(
             contenedor,
@@ -591,7 +679,11 @@ def crear_inicio(parent):
             bg=BLANCO,
             fg=TEXTO
         )
-        numero.pack(anchor="w", padx=15)
+
+        numero.pack(
+            anchor="w",
+            padx=15
+        )
 
         tk.Label(
             contenedor,
@@ -600,30 +692,55 @@ def crear_inicio(parent):
             bg=BLANCO,
             fg=GRIS,
             justify="left"
-        ).pack(anchor="w", padx=15, pady=(5, 15))
+        ).pack(
+            anchor="w",
+            padx=15,
+            pady=(5, 15)
+        )
 
         return numero
 
+    # Tarjeta de empleados
+
     lbl_empleados = tarjeta(
-        "●●", "Empleados registrados", VERDE
+        "●●",
+        "Empleados registrados",
+        VERDE
     )
+
+    # Tarjeta de insumos
 
     lbl_insumos = tarjeta(
-        "◆", "Insumos registrados", "#168CA0"
+        "◆",
+        "Insumos registrados",
+        "#168CA0"
     )
+
+    # Tarjeta de stock bajo
 
     lbl_stock = tarjeta(
-        "▲", "Insumos con stock bajo", ROJO
+        "▲",
+        "Insumos con stock bajo",
+        ROJO
     )
 
+    # Tarjeta de vencimientos
+
     lbl_vencimientos = tarjeta(
-        "▣", "Vencimientos próximos", VERDE
+        "▣",
+        "Vencimientos próximos",
+        VERDE
     )
 
     # =========================
     # ACCESOS RÁPIDOS
     # =========================
-    inferiores = tk.Frame(panel_inicio, bg=FONDO)
+
+    inferiores = tk.Frame(
+        panel_inicio,
+        bg=FONDO
+    )
+
     inferiores.pack(
         fill="x",
         padx=25,
@@ -631,13 +748,15 @@ def crear_inicio(parent):
     )
 
     def acceso_rapido(titulo, descripcion, comando):
-        tarjeta = tk.Frame(
+
+        tarjeta_acceso = tk.Frame(
             inferiores,
             bg=BLANCO,
             highlightbackground=BORDE,
             highlightthickness=1
         )
-        tarjeta.pack(
+
+        tarjeta_acceso.pack(
             side="left",
             fill="both",
             expand=True,
@@ -645,23 +764,30 @@ def crear_inicio(parent):
         )
 
         tk.Label(
-            tarjeta,
+            tarjeta_acceso,
             text=titulo,
             font=("Arial", 12, "bold"),
             bg=BLANCO,
             fg=TEXTO
-        ).pack(anchor="w", padx=20, pady=(20, 5))
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(20, 5)
+        )
 
         tk.Label(
-            tarjeta,
+            tarjeta_acceso,
             text=descripcion,
             font=("Arial", 9),
             bg=BLANCO,
             fg=GRIS
-        ).pack(anchor="w", padx=20)
+        ).pack(
+            anchor="w",
+            padx=20
+        )
 
         tk.Button(
-            tarjeta,
+            tarjeta_acceso,
             text="Ver registros  →",
             command=comando,
             bg=VERDE,
@@ -671,13 +797,21 @@ def crear_inicio(parent):
             cursor="hand2",
             padx=15,
             pady=8
-        ).pack(anchor="w", padx=20, pady=20)
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=20
+        )
+
+    # Acceso a empleados
 
     acceso_rapido(
         "Registro de empleados",
         "Gestioná los empleados del centro de salud.",
         lambda: mostrar_vista(crear_empleado)
     )
+
+    # Acceso a insumos
 
     acceso_rapido(
         "Control de insumos",
@@ -688,6 +822,7 @@ def crear_inicio(parent):
     # =========================
     # ACTUALIZAR DATOS INICIALES
     # =========================
+
     actualizar_estadisticas()
 
     return frame
